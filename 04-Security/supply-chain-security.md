@@ -70,6 +70,85 @@ cosign attach sbom --sbom payments-api-sbom.json \
 
 Store SBOMs alongside image signatures in the registry. This enables downstream tooling (Grype, Trivy, Dependency Track) to query them for vulnerability matching without re-scanning images.
 
+## SLSA build integrity
+
+SLSA (Supply-chain Levels for Software Artifacts) is a framework for measuring build integrity. It defines four levels of non-falsifiability for the build process:
+
+| Level | Requirement | What it prevents |
+|---|---|---|
+| SLSA 1 | Build process documented; provenance generated | Accidental tampering; no build reproducibility claim |
+| SLSA 2 | Build service is hosted; signed provenance | Falsified provenance from a compromised developer machine |
+| SLSA 3 | Hardened build service; non-falsifiable provenance | Compromise of the build platform itself |
+| SLSA 4 | Two-person review; hermetic builds | Insider threats; dependency substitution attacks |
+
+**Platform target: SLSA Level 3.** Level 2 is achievable with a standard CI service (GitHub Actions, CodeBuild) and signed provenance. Level 3 requires a hardened build environment — isolated ephemeral runners, no network egress during build, verified inputs. Level 4 is reserved for critical infrastructure (OS images, trust roots).
+
+### Provenance attestations vs signatures
+
+A Cosign signature proves *who* authorized the image. A provenance attestation proves *how* it was built:
+
+```text
+Signature:   "image sha256:abc was signed by KMS key arn:aws:kms:.../signing-key"
+Provenance:  "image sha256:abc was built by GitHub Actions run #1234
+              from commit a1b2c3 in repo org/payments-api
+              using Dockerfile at path ./Dockerfile
+              at 2024-01-15T10:30:00Z"
+```
+
+Without provenance, admission control can only verify that someone with the signing key authorized the image. With provenance, it can verify that the image was built by the expected CI system from the expected commit — closing the gap where a developer signs an image locally and pushes it directly.
+
+**Generating provenance with Witness:**
+
+```bash
+# In CI: wrap the build command with Witness to capture signed provenance
+witness run \
+  --step build \
+  --signer-kms-ref awskms:///arn:aws:kms:us-east-1:123456789:key/build-key \
+  -- docker build -t payments-api:v1.2.3 .
+
+# Attach the provenance attestation to the image in the registry
+cosign attest \
+  --predicate witness-attestation.json \
+  --type slsaprovenance \
+  --key awskms:///arn:aws:kms:us-east-1:123456789:key/signing-key \
+  123456789.dkr.ecr.us-east-1.amazonaws.com/payments-api:v1.2.3
+```
+
+### Admission enforcement of provenance
+
+Use Kyverno with the Ratify verifier to enforce both signature and provenance at admission:
+
+```yaml
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-slsa-provenance
+spec:
+  validationFailureAction: Enforce
+  rules:
+  - name: verify-provenance-attestation
+    match:
+      any:
+      - resources:
+          kinds: ["Pod"]
+    verifyImages:
+    - imageReferences:
+      - "123456789.dkr.ecr.us-east-1.amazonaws.com/*"
+      attestations:
+      - predicateType: https://slsa.dev/provenance/v0.2
+        attestors:
+        - entries:
+          - keys:
+              kms: awskms:///arn:aws:kms:us-east-1:123456789:key/signing-key
+        conditions:
+        - all:
+          - key: "{{ builder.id }}"
+            operator: Equals
+            value: "https://github.com/org/payments-api/.github/workflows/build.yml"
+```
+
+The `builder.id` condition enforces that the image was built by the expected GitHub Actions workflow — not by an arbitrary process with access to the signing key.
+
 ## Admission-enforced verification
 
 Signing images is meaningless without enforcing verification at admission. Otherwise, unsigned images (from shadow deployments or manual pushes) run freely.
