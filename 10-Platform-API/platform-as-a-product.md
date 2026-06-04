@@ -85,5 +85,70 @@ The platform team should never become a human configuration applier. Every reque
 
 **Cost physics of platform investment**: the productivity return on platform investment becomes favorable at 50–100 engineers. Below this threshold, the overhead of maintaining Backstage, GitOps controllers, admission webhooks, and golden paths often exceeds the productivity gained. Smaller organizations should apply a subset: golden path templates and GitOps are high-ROI at any scale; Backstage and CRD-based platform APIs pay off at larger scale.
 
+## CNCF Platform Engineering Maturity Model
+
+The CNCF TAG App Delivery maturity model assesses platform teams across five dimensions: **Investment, Adoption, Interfaces, Operations, and Measurement**. Teams progress through four levels:
+
+| Level | Name | Investment model | Adoption driver | Operational state |
+|---|---|---|---|---|
+| 1 | Provisional | Tiger teams / volunteers | Necessity — no standard exists | Manual, variable, unsupported |
+| 2 | Operationalized | Dedicated team (cost center) | External pressure / management mandate | Reactive technical delivery |
+| 3 | Scalable | Platform as a product (value-based investment) | Intrinsic pull — self-service reduces developer friction | One-click self-service; DORA/SPACE metrics automated |
+| 4 | Optimizing | Core ecosystem enabler | Platform is the standard way of working | Product teams contribute back; zero-downtime upgrades |
+
+**Level 1 → 2 transition**: create a dedicated team with a funded backlog. The signal that a team is stuck at Level 1 is engineer burnout from maintaining ad-hoc tooling alongside feature work.
+
+**Level 2 → 3 transition**: the platform moves from "teams use it because they're told to" to "teams use it because it's faster than doing it themselves." The metric: self-service completion rate — teams finishing golden path flows without opening a ticket. If completion rate is below 80%, the platform is at Level 2 operationally even if the team considers itself "product-oriented."
+
+**Level 3 → 4 transition**: platform capabilities become specialized enough that domain experts (security team, data platform team) build on top of the platform rather than alongside it. Product engineers submit PRs to the platform's golden path templates. The platform team becomes an enabler of specialized contributions, not the sole builder.
+
+**Cost threshold**: Level 3 platform practices (Backstage, CRD-based APIs, automated DORA instrumentation) require 50–100+ engineers to justify the investment. Below this threshold, teams should focus on Level 2 capabilities — golden path templates and GitOps deliver Level 2 value at any scale.
+
+## The 5-plane reference architecture
+
+The CNCF TAG App Delivery Platforms Working Group and Humanitec reference architecture both describe a 5-plane model for what an IDP must provide. This maps directly to this guide's modules:
+
+```mermaid
+flowchart TB
+    subgraph p1["Developer Control Plane"]
+        BACKSTAGE["Backstage portal\nService catalog\nGolden path scaffolder"]
+    end
+
+    subgraph p2["Integration & Delivery Plane"]
+        GITOPS["ArgoCD / Flux\nGitOps reconciliation"]
+        PIPELINES["CI pipelines\nPromotion gates"]
+    end
+
+    subgraph p3["Security Plane"]
+        RBAC["RBAC / PSA\nAdmission policies"]
+        SECRETS["ESO / Vault / SPIRE\nWorkload identity"]
+    end
+
+    subgraph p4["Resource Plane"]
+        EKS["Kubernetes clusters\n(EKS / AKS / GKE)"]
+        CSI["Storage CSI\nNetworking CNI"]
+    end
+
+    subgraph p5["Observability Plane"]
+        OTEL["OpenTelemetry\nPrometheus / Grafana"]
+        SLO["SLO management"]
+    end
+
+    p1 -->|"self-service requests"| p2
+    p2 -->|"deploys to"| p4
+    p3 -->|"governs"| p4
+    p5 -->|"observes"| p4
+```
+
+| Plane | This guide | Key modules |
+|---|---|---|
+| Developer Control Plane | Module 10 | Backstage, golden paths, service catalog, platform API design |
+| Integration & Delivery Plane | Module 05 | ArgoCD vs Flux, app-of-apps, promotion pipelines, progressive delivery |
+| Security Plane | Module 04 | RBAC, PSA, secrets management, runtime security |
+| Resource Plane | Modules 01–03, 06, 09 | Cluster architecture, networking, autoscaling, storage |
+| Observability Plane | Module 07 | OpenTelemetry, Prometheus, SLO design |
+
+The 5-plane model is useful as an audit checklist: a platform that lacks a well-defined Security Plane is operating below Level 2 maturity regardless of how good its Developer Control Plane is.
+
 See [backstage-and-developer-portal.md](backstage-and-developer-portal.md) for the IDP as the interface for this model.
 See [platform-api-design.md](platform-api-design.md) for CRDs as the self-service mechanism.
