@@ -62,14 +62,14 @@ Fleet management patterns, workload federation, active-active vs active-passive 
 ---
 
 ### [09 — Storage](09-Storage/README.md)
-PV/PVC design, CSI driver selection, storage class configuration, stateful workload patterns, and backup strategies.
+StorageClass and PVC design (WaitForFirstConsumer, reclaim policies, encryption), CSI driver selection (EBS vs EFS vs S3), stateful workload patterns (managed RDS as golden path, StatefulSets for distributed systems), backup and snapshots (VolumeSnapshot API, Velero hooks, AWS Backup for EKS), and storage performance (gp3 vs io2, online resize, StorageClass migration).
 
 ---
 
 ### [10 — Platform API](10-Platform-API/README.md)
-Internal developer portal design with Backstage, golden path templates, service catalog, and developer experience metrics (DORA/SPACE).
+Backstage and internal developer portal design (catalog rot prevention, workflow integration, scale thresholds), golden path templates (Helm vs Kustomize post-renderer pattern, drift propagation), service catalog design (automated discovery, ownership model), platform API via CRDs (KRO vs Crossplane XRDs), and platform as a product (self-service model, adoption metrics, internal SLAs).
 
 ---
 
 ### [11 — Cloud-Specific](11-Cloud-Specific/README.md)
-Managed Kubernetes differences and cloud-native integrations: EKS (node groups, Karpenter, IAM for Service Accounts), AKS (node pools, AAD integration, Azure CNI), and GKE (Autopilot vs Standard, Workload Identity, GKE Dataplane V2).
+EKS: Auto Mode vs managed node groups, Pod Identity vs IRSA fleet tradeoffs, VPC CNI and Security Groups for Pods. AKS: Azure Workload Identity, Azure CNI Overlay, ACNS Cilium networking. GKE: Autopilot vs Standard, Dataplane V2 eBPF networking, Config Connector. Cloud portability: what is portable across clouds, where portability breaks (identity, StorageClass, load balancer annotations), and how to document deliberate lock-in.
