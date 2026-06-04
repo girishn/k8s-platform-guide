@@ -96,3 +96,4 @@ A service deployed from a golden path 18 months ago is using the organizational 
 
 See [backstage-and-developer-portal.md](backstage-and-developer-portal.md) for Backstage scaffolder integration.
 See [platform-api-design.md](platform-api-design.md) for CRD-based abstractions that templates can provision.
+See [../05-GitOps/app-of-apps-and-applicationsets.md](../05-GitOps/app-of-apps-and-applicationsets.md) for the ArgoCD ApplicationSet pattern that golden path templates register new services into.

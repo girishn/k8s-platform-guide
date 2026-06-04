@@ -121,3 +121,4 @@ During large-scale events (fleet-wide spot interruption, mass HPA scale-out), Ka
 
 See [hpa-vpa-keda.md](hpa-vpa-keda.md) for the pod-level scalers that drive node-level demand.
 See [karpenter-nodepool-design.md](karpenter-nodepool-design.md) for NodePool configuration that implements the spot/on-demand mix.
+See [../01-Cluster-Architecture/node-pool-design.md](../01-Cluster-Architecture/node-pool-design.md) for node pool taint/toleration strategy that separates spot and on-demand workloads at the node group level.

@@ -112,6 +112,50 @@ KCC is the GCP-native equivalent of AWS ACK. The resource is reconciled by a KCC
 
 **Workload Identity for KCC**: KCC controllers need GCP IAM permissions to manage cloud resources. Configure a dedicated GCP service account with the required permissions, bound via Workload Identity to the KCC controller's Kubernetes ServiceAccount.
 
+## Storage: GCP Persistent Disk and Filestore
+
+GKE's CSI ecosystem maps directly to the same access mode decisions as EKS and AKS:
+
+| Driver | Access mode | AZ scope | Equivalent |
+|---|---|---|---|
+| Compute Engine PD CSI | RWO | Single zone | EBS CSI / Azure Disk |
+| Filestore CSI | RWX | Regional | EFS / Azure Files NFS |
+| Cloud Storage FUSE CSI | RWO / ROX | Regional | S3 CSI (same caveats) |
+
+**GCP Persistent Disk** is the block storage equivalent of EBS. Available types:
+
+```yaml
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: gcp-ssd
+provisioner: pd.csi.storage.gke.io
+volumeBindingMode: WaitForFirstConsumer    # zone co-location — same as EBS
+parameters:
+  type: pd-ssd              # pd-standard (HDD), pd-ssd, pd-balanced, pd-extreme
+  replication-type: none    # none = zonal; regional-pd = synchronous multi-zone replication
+allowVolumeExpansion: true
+```
+
+**Regional Persistent Disk** (`replication-type: regional-pd`) synchronously replicates data across two zones in a region. This is GCP's unique differentiator — no equivalent exists in EBS or Azure Disk. Use for stateful workloads that need fast failover across zones without backup-and-restore cycles.
+
+**Filestore** provides managed NFS at three tiers: Basic (zonal, for dev/test), Enterprise (regional HA, for production), and High Scale (large-scale parallelism for HPC workloads). Enterprise tier provides synchronous multi-zone availability — equivalent to EFS's regional availability model.
+
+```yaml
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: gcp-filestore
+provisioner: filestore.csi.storage.gke.io
+parameters:
+  tier: enterprise      # Basic (zonal), Standard, Premium, Enterprise (HA)
+  network: default
+```
+
+**Cloud Storage FUSE**: same caveats as S3 CSI — POSIX semantics not guaranteed, avoid for workloads that expect atomic renames or file locking. Use the Cloud Storage SDK directly with Workload Identity for production object storage access.
+
+See [../09-Storage/csi-driver-selection.md](../09-Storage/csi-driver-selection.md) for the access mode decision framework that applies identically to GCP storage.
+
 ## Human access: Envoy-based Identity Service
 
 GKE supports configuring an OIDC provider for `kubectl` authentication via an in-cluster Envoy-based Identity Service. This enables consistent human access using corporate SSO (Okta, Google Identity) mapped to Kubernetes RBAC — the same model EKS supports natively via `--oidc-issuer-url`.

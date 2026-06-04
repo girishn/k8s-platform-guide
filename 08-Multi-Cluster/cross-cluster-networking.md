@@ -127,6 +127,8 @@ Use short, stable cluster identifiers in your naming convention: `use1p` (us-eas
 | Zero-trust mTLS identity across clusters | SPIFFE Nested SPIRE |
 | L7 traffic policy across clusters | Service mesh federation (Istio / Cilium) |
 
+See [../03-Networking/service-mesh-selection.md](../03-Networking/service-mesh-selection.md) for single-cluster service mesh design that underpins cross-cluster federation.
+
 VPC Lattice + SPIFFE is the recommended combination for production multi-cluster platforms: Lattice handles the networking layer, SPIFFE handles the identity layer. They are complementary, not alternatives.
 
 See [dr-topology.md](dr-topology.md) for how SPIFFE federation enables active-active DR topology.

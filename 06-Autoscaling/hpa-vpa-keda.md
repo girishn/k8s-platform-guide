@@ -86,6 +86,35 @@ flowchart TD
     style VPA_REC fill:#2980b9,color:#fff
 ```
 
+## VPA + Karpenter interaction
+
+VPA in `Auto` mode and Karpenter interact in a way that can cause node churn:
+
+1. VPA evicts a pod to apply new (larger) resource requests
+2. The evicted pod now requests more CPU/memory than the current nodes have available
+3. Karpenter sees a pending pod and provisions a new, larger node
+4. The old node may become underutilized and be deprovisioned
+5. Repeat on the next VPA recommendation cycle
+
+This churns nodes unnecessarily and drives up EC2 costs. The pattern is subtle because neither component is behaving incorrectly — they are both doing their jobs, but their actions compound.
+
+**Safe pattern**: never run VPA in `Auto` mode in clusters managed by Karpenter. Use VPA in `Off` mode exclusively — it generates recommendations that engineers apply to the pod spec in Git. Karpenter then right-sizes nodes to fit the updated (human-applied) requests during normal scheduling, without pod eviction cycles.
+
+```mermaid
+flowchart LR
+    subgraph safe["Safe: VPA Off + Karpenter"]
+        VPA_OFF["VPA (Off)\nrecommends 450m CPU"] -->|"engineer applies\nto Git"| SPEC["Pod spec updated\n450m CPU request"]
+        SPEC -->|"new pods scheduled"| KARP["Karpenter\nprovisions right-sized node"]
+    end
+
+    subgraph unsafe["Avoid: VPA Auto + Karpenter"]
+        VPA_AUTO["VPA (Auto)\nevicts pod"] -->|"larger pod pending"| KARP2["Karpenter\nprovisions larger node"]
+        KARP2 -->|"old node underused\ndeprovisioned"| CHURN["Node churn\ncost spike"]
+    end
+```
+
+See [karpenter-vs-cluster-autoscaler.md](karpenter-vs-cluster-autoscaler.md) for Karpenter's batching behavior that interacts with rapid pod eviction cycles.
+
 ## KEDA: event-driven and scale-to-zero
 
 KEDA extends HPA to support external event sources as scaling triggers. It creates and manages an HPA under the hood — KEDA is not a replacement for HPA, it's a superset.

@@ -88,6 +88,86 @@ AKS provides managed add-ons for common platform components. Key add-ons:
 
 Managed add-ons are updated by Azure in coordination with the AKS version lifecycle — the same model as EKS managed add-ons.
 
+## Node pool architecture: system vs user pools
+
+Every AKS cluster requires at least one **system node pool**. AKS automatically schedules critical system components (CoreDNS, metrics-server, tunnelfront) onto system pools. This is an AKS-specific constraint with no EKS equivalent.
+
+```mermaid
+flowchart TD
+    CLUSTER["AKS Cluster"] --> SYS["System node pool\n(required, ≥1 node)\nRuns: CoreDNS, metrics-server\ncritical AKS agents"]
+    CLUSTER --> USER1["User node pool\n(application workloads)\ne.g. Standard_D4s_v5"]
+    CLUSTER --> USER2["User node pool\n(GPU workloads)\ne.g. Standard_NC6s_v3"]
+```
+
+**System pool taint**: AKS applies `CriticalAddonsOnly=true:NoSchedule` to system node pools by default. This prevents application pods from landing on system nodes and starving system components of resources. Application pods need a `tolerations` entry to run on system nodes — which they should not have.
+
+**Minimum size during upgrades**: AKS cordons and drains one node at a time during upgrades. A single-node system pool means the system components are momentarily unschedulable during the cordon phase. Production system pools should have **≥2 nodes** to maintain system component availability throughout an upgrade.
+
+```yaml
+# System pool: small, stable, minimum footprint
+systemNodePool:
+  name: system
+  vmSize: Standard_D2s_v3    # 2 vCPU, 8 GiB — sized for system components only
+  minCount: 2
+  maxCount: 3
+  mode: System               # AKS enforces CriticalAddonsOnly taint
+  nodeTaints: []             # AKS adds CriticalAddonsOnly automatically
+
+# User pool: application workloads
+userNodePool:
+  name: app
+  vmSize: Standard_D8s_v5
+  minCount: 1
+  maxCount: 20
+  mode: User
+  nodeTaints:
+  - "workload=app:NoSchedule"    # optional: further segregate workload types
+```
+
+You cannot delete the last system node pool. To migrate from one system pool VM size to another, create the new pool first, cordon and drain the old pool, then delete it.
+
+## Storage: Azure Disk and Azure Files
+
+AKS storage follows the same CSI pattern as EKS, with cloud-specific drivers:
+
+| Driver | Access mode | AZ scope | Equivalent |
+|---|---|---|---|
+| Azure Disk CSI | RWO | Single AZ | EBS CSI |
+| Azure Files CSI | RWX | Multi-region | EFS CSI |
+| Azure Blob CSI | RWO / ROX | Regional | S3 CSI (same caveats) |
+
+**Azure Disk** is backed by managed disks (Standard HDD, Standard SSD, Premium SSD, Ultra Disk). Use Premium SSD (`managed-premium`) for production databases — same rationale as EBS gp3: low latency, configurable IOPS.
+
+```yaml
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: azure-premium-ssd
+provisioner: disk.csi.azure.com
+volumeBindingMode: WaitForFirstConsumer    # same AZ co-location requirement as EBS
+parameters:
+  skuName: Premium_LRS
+  cachingMode: ReadOnly    # read caching; use None for write-heavy workloads
+allowVolumeExpansion: true
+```
+
+**Azure Files** provides SMB/NFS shared storage accessible across zones — equivalent to EFS. Use NFS protocol (`nfs`) not SMB for Linux workloads to avoid CIFS overhead and POSIX compatibility gaps.
+
+```yaml
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: azure-files-nfs
+provisioner: file.csi.azure.com
+parameters:
+  protocol: nfs
+  skuName: Premium_LRS    # Premium for consistent latency; Standard uses HDD
+mountOptions:
+- nconnect=8              # multiple TCP connections for throughput
+```
+
+See [../09-Storage/csi-driver-selection.md](../09-Storage/csi-driver-selection.md) for the access mode decision framework that applies identically to Azure storage.
+
 ## Notable AKS limitation: external OIDC authenticator
 
 EKS and GKE both support configuring an external OIDC provider as the primary `--oidc-issuer-url` for human authentication to the Kubernetes API server. This enables a consistent `kubectl` login flow using corporate SSO (Okta, Azure AD with custom claims).

@@ -11,3 +11,4 @@ ArgoCD vs Flux, app-of-apps and ApplicationSets, multi-cluster sync patterns, en
 | [multi-cluster-sync.md](multi-cluster-sync.md) | Hub-and-spoke ArgoCD vs decentralized Flux, deployment paralysis risk, spoke registration, network connectivity requirements |
 | [promotion-pipelines.md](promotion-pipelines.md) | PR-based vs automated promotion, hybrid auto-dev/manual-prod pattern, testing gates, GitOps-native rollback via git revert |
 | [drift-detection-reconciliation.md](drift-detection-reconciliation.md) | Event-driven vs interval reconciliation, self-healing conflict with incident response, suspend patterns, Day 2 config rot, Helm random value problem |
+| [progressive-delivery.md](progressive-delivery.md) | Argo Rollouts vs Flagger, blue-green vs canary mechanics, Gateway API traffic shifting, automated rollback, ArgoCD health check config |
