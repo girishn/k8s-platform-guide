@@ -63,6 +63,7 @@ With `Retain`, the PV enters `Released` state after the PVC is deleted. It canno
 ## Encryption enforcement
 
 All production StorageClasses should enforce encryption-at-rest with a customer-managed KMS key. This ensures:
+
 - Encryption cannot be bypassed by tenants creating PVCs
 - KMS key policy controls who can decrypt the volume
 - Compliance requirements (HIPAA, PCI-DSS) are satisfied automatically

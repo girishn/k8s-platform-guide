@@ -31,6 +31,7 @@ flowchart TD
 ```
 
 **Failure domain**: if the collector pod on a node crashes, all observability for that node is lost until recovery. The DaemonSet controller will restart it, but there's a gap. Mitigate with:
+
 - Liveness and readiness probes on the collector
 - Persistent buffer on local disk (`file_storage` extension) to replay telemetry after restart
 - Alert on DaemonSet pod restarts as a platform health signal
@@ -58,6 +59,7 @@ flowchart LR
 ```
 
 **When to use the gateway layer:**
+
 - Tail-based trace sampling (requires seeing all spans for a trace before deciding to sample)
 - Routing different telemetry to different backends by namespace, team, or environment label
 - Centralized attribute enrichment (adding environment, cluster name, region to all telemetry)
@@ -70,12 +72,14 @@ flowchart LR
 Injecting an OTel collector as a sidecar into every application pod is expensive — ~50–100 MiB memory and 0.1 vCPU per pod. Reserve the sidecar pattern for cases where per-pod configuration is required, primarily service mesh proxies (Envoy access logs).
 
 In practice, most teams use the DaemonSet collector to receive application telemetry via OTLP push. Sidecars are only justified when:
+
 - Per-pod collector configuration differs significantly across pods
 - The application cannot be configured to push to a DaemonSet endpoint
 
 ## ADOT on EKS
 
 AWS Distro for OpenTelemetry (ADOT) is AWS's supported distribution of the OTel Collector. It includes EKS-specific integrations:
+
 - Automatic `cluster_name` enrichment from EC2 instance metadata
 - Native integration with Amazon Managed Service for Prometheus (remote write)
 - Application Signals receiver for auto-instrumentation of Java/Python/Node.js (no code changes required)

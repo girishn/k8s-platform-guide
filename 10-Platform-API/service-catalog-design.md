@@ -60,11 +60,13 @@ The catalog makes this split explicit: the `owner` field on every entity should 
 ## Avoiding the ghost town
 
 Signs a catalog is becoming a ghost town:
+
 - Services in the catalog that were decommissioned months ago
 - Owner fields pointing to teams that no longer exist
 - No correlation between catalog health status and actual production incidents
 
 **Lifecycle management**:
+
 - Require `catalog-info.yaml` updates to pass a schema validation step in CI
 - Surface catalog entity staleness (last synced, entity not updated in >90 days) as a metric in the platform team's own SLO
 - Automate removal: if a Git repo is archived, the catalog entity should be automatically deprecated

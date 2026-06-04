@@ -93,12 +93,14 @@ For edge computing or environments with strict resource budgets, Flux is the pra
 ## When to choose each
 
 **Choose ArgoCD when:**
+
 - Your team is transitioning from traditional CI/CD and needs a visual deployment dashboard
 - You want a central hub with unified access control across the fleet
 - You need AppProject-level logical isolation for multi-tenancy
 - Your fleet is hub-and-spoke and hub availability is acceptable
 
 **Choose Flux when:**
+
 - Each cluster must be fully autonomous (decentralized, edge, or air-gap)
 - Resource footprint is constrained
 - You want to stay entirely within Kubernetes-native primitives (no separate RBAC model)

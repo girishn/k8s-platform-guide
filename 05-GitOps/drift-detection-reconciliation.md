@@ -3,6 +3,7 @@
 ## What drift is and why it happens
 
 Drift is when the live cluster state diverges from the desired state declared in Git. It happens through:
+
 - Manual `kubectl apply` or `kubectl edit` during incidents
 - Operators that mutate resources after creation (admission webhooks, controllers)
 - Helm chart upgrades that change defaults without a Git commit
@@ -73,6 +74,7 @@ This is a real production incident pattern. The engineer applies a fix; the GitO
 Both ArgoCD and Flux support suspending reconciliation temporarily — the break-glass mechanism.
 
 **ArgoCD — disable auto-sync:**
+
 ```bash
 argocd app set payments --sync-policy none    # disable auto-sync
 # ... perform manual changes for incident response ...
@@ -80,6 +82,7 @@ argocd app set payments --sync-policy automated  # re-enable
 ```
 
 **Flux — suspend annotation:**
+
 ```bash
 flux suspend kustomization payments
 # ... perform manual changes ...
@@ -121,6 +124,7 @@ env:
 ```
 
 Other sources of reconciliation noise:
+
 - `helm.sh/chart` annotation with timestamps
 - Resource version fields that controllers update
 - `kubectl.kubernetes.io/last-applied-configuration` annotation differences

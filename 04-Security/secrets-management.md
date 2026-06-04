@@ -9,11 +9,13 @@ Any secrets management system has a bootstrap secret: the credential that authen
 Kubernetes Secrets are base64-encoded (not encrypted) by default. Encryption at rest requires explicit configuration of an `EncryptionConfiguration` on the API server — on managed K8s (EKS, AKS, GKE), this is handled by the provider via envelope encryption with a KMS key.
 
 **What native Secrets get right:**
+
 - First-class Kubernetes objects: RBAC, audit logs, namespacing all work natively
 - Zero operational overhead — no additional components
 - Mounted as env vars or volumes transparently to applications
 
 **What they get wrong:**
+
 - Default RBAC `view` ClusterRole grants `get/list/watch` on most resources but not Secrets — however, many operators and service accounts are granted broader permissions that include Secrets
 - Secret values appear in etcd; if etcd backup snapshots are stored without encryption, Secrets are exposed
 - Secrets appear in `kubectl describe` and API server audit logs — watch for `list` + `get` on Secrets in audit logs as a signal of credential harvesting

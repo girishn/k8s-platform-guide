@@ -25,6 +25,7 @@ flowchart TD
 ```
 
 **`/common`** contains the non-negotiable fleet baseline:
+
 - Require resource limits on all containers
 - Block privileged containers
 - Require `team` and `environment` labels
@@ -71,6 +72,7 @@ Each cluster's admission webhook must independently make the fail-open vs fail-c
 **Fleet-wide enforcement rule**: all production clusters must be fail-closed for security-critical policies (image registry, privilege escalation). The admission webhook pods must be highly available (3 replicas, PDB, multi-AZ).
 
 **Detecting fail-open drift**:
+
 ```yaml
 # Kyverno policy: validate webhook failure policy
 apiVersion: kyverno.io/v1
@@ -113,6 +115,7 @@ sum by (cluster_name) (
 ```
 
 **Fleet-level alerts**: some alerts are meaningful only at fleet scope:
+
 ```yaml
 - alert: PolicyViolationSurge
   expr: |
@@ -128,6 +131,7 @@ A surge in policy violations in one cluster signals either a bad deployment push
 ## Fleet health dashboard
 
 A fleet health view should surface, per cluster:
+
 - ArgoCD sync status (all apps synced vs OutOfSync count)
 - Kyverno policy violation count
 - Karpenter node provisioning failures
@@ -150,6 +154,7 @@ flowchart LR
 In a multi-cluster fleet with mTLS (service mesh or Cilium), cross-cluster traffic is encrypted — traditional network tap tools can't inspect it. Post-incident reconstruction requires metadata exported from the data plane.
 
 **Required exports per cluster:**
+
 - Cilium Hubble flows: connection allowed/denied, source/destination SPIFFE identity, policy verdict
 - Envoy access logs: HTTP method, path, response code, latency, source identity
 - Kubernetes audit logs: who changed what resource, when, from which client

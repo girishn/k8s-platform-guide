@@ -24,6 +24,7 @@ flowchart TB
 **The fleet sprawl problem**: in a 20-cluster fleet, each cluster has its own OIDC issuer URL. Every IAM role that needs to be used across clusters must have all 20 OIDC issuer URLs in its trust policy. Adding a new cluster means updating every shared IAM role's trust policy — a scaling problem.
 
 IRSA is still required for:
+
 - **Fargate nodes** — Pod Identity doesn't support Fargate
 - **Windows nodes** — Pod Identity doesn't support Windows
 
@@ -53,6 +54,7 @@ IRSA is still required for:
 A single IAM role with this trust policy works for any EKS cluster in the account. For fleet-wide platform roles (EBS CSI driver, cert-manager, external-secrets), this eliminates per-cluster IAM policy updates.
 
 **Pod Identity association** (binds a role to a specific ServiceAccount in a cluster):
+
 ```bash
 aws eks create-pod-identity-association \
   --cluster-name my-cluster \
@@ -68,6 +70,7 @@ The association is stored in EKS — not in the cluster as an annotation. Changi
 Amazon VPC CNI assigns pod IPs directly from the VPC CIDR — pods are first-class VPC citizens. This is EKS's default networking model and differs from overlay network CNIs (Calico, Cilium, Weave).
 
 **Implications:**
+
 - Pods have routable IPs — accessible from other VPC resources without NAT
 - Pod IPs consume VPC CIDR space — IP exhaustion is a real scaling concern in large clusters
 - Security Groups for Pods: attach EC2 security groups directly to pods
@@ -84,6 +87,7 @@ flowchart LR
 ### Security Groups for Pods
 
 VPC CNI's most EKS-specific feature: attach EC2 Security Groups to pods instead of (or in addition to) Kubernetes NetworkPolicy. This allows:
+
 - Reusing existing EC2-based firewall rules for pod-level access control
 - Simpler integration with RDS, ElastiCache, and other AWS services that use Security Group-based access control
 - Compliance requirements that mandate Security Group use
@@ -110,6 +114,7 @@ spec:
 VPC CNI's IP-from-VPC-CIDR model consumes address space quickly. Each node pre-warms a pool of IPs for fast pod startup — even pods not yet scheduled consume IP addresses on nodes.
 
 **Mitigation options:**
+
 - Use VPC CNI with custom networking: pods use secondary CIDR ranges (RFC1918 /8 ranges) instead of the primary VPC CIDR, relieving exhaustion in large clusters
 - Use prefix delegation: assign /28 prefixes to nodes instead of individual IPs, supporting more pods per node with fewer ENI attachments
 

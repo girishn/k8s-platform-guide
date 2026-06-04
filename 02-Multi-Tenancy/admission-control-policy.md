@@ -55,6 +55,7 @@ flowchart TD
 **Production answer**: Fail-closed for security-critical policies (image registry enforcement, privilege escalation checks). Fail-open is not acceptable for security policies — it creates a window where non-compliant workloads land undetected.
 
 Mitigating fail-closed deployment paralysis:
+
 - Run admission webhook pods with `replicas: 3` and a PodDisruptionBudget (`minAvailable: 2`)
 - Spread across AZs with `topologySpreadConstraints`
 - Set aggressive but reasonable timeouts (`timeoutSeconds: 5`)
@@ -65,6 +66,7 @@ Mitigating fail-closed deployment paralysis:
 Not everything belongs in an admission webhook. Heavy policy evaluation in the critical path increases admission latency.
 
 **High-value, always enforce:**
+
 - Image registry allowlist (block images not from approved registries)
 - No `latest` tag (require digest-pinned or semver-tagged images)
 - Resource requests/limits required (block pods without `resources` set)
@@ -72,17 +74,20 @@ Not everything belongs in an admission webhook. Heavy policy evaluation in the c
 - No `hostNetwork: true` or `hostPID: true` without explicit annotation
 
 **Medium-value, enforce in production namespaces:**
+
 - Naming conventions (namespace labels, resource annotations)
 - Required labels for cost attribution (`cost-center`, `team`, `env`)
 - S3 bucket naming: must start with `<tenant-id>-`
 
 **Don't enforce via admission webhook:**
+
 - Best-practice recommendations (high noise, low signal)
 - Anything that requires external API calls in the validation path (slow, brittle)
 
 ## Audit mode: enforcing on existing resources
 
 Gatekeeper and Kyverno both support audit mode: scan existing cluster resources against policies without blocking new ones. Use audit mode to:
+
 1. Assess policy impact before switching to enforcement mode
 2. Detect configuration drift on resources created before the policy existed
 3. Generate compliance reports without blocking deployments

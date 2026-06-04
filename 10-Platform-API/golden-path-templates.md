@@ -40,16 +40,18 @@ A template that requires developers to configure these components themselves is 
 These tools serve different purposes in the template ecosystem:
 
 **Helm** is for **base packaging** — complex applications with conditional logic, chart dependencies, and reusable parameterization. Use Helm for:
+
 - Platform components that are deployed across clusters (cert-manager, external-secrets, ArgoCD)
 - Application base charts with many configurable parameters
 - Charts sourced from upstream community repositories
 
 **Kustomize** is for **last-mile customization** — patching an existing Helm chart or Kubernetes manifest to add environment-specific overlays without forking. Use Kustomize for:
+
 - Injecting sidecars or annotations into upstream community charts
 - Overriding specific values by environment (dev/staging/prod) without duplicating the full chart
 - Applying organizational conventions (labels, resource limits) to third-party charts
 
-**Production pattern: immutable Helm bases + Kustomize post-rendering**
+### Production pattern: immutable Helm bases + Kustomize post-rendering
 
 ```yaml
 # ArgoCD Application using Kustomize post-renderer over a Helm chart
@@ -73,6 +75,7 @@ This treats the upstream Helm chart as an immutable dependency. Organizational p
 ## Templates built without developer input get routed around
 
 A golden path that doesn't match how developers actually work becomes an obstacle. Teams create workarounds — manually provisioning namespaces, bypassing the template, provisioning infrastructure outside the platform. This shadow IT:
+
 - Violates security policies the template was designed to enforce
 - Creates untracked infrastructure with no ownership
 - Undermines the platform adoption metrics

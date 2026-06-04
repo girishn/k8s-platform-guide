@@ -19,6 +19,7 @@ flowchart LR
 ```
 
 **What managed RDS gives you that a StatefulSet doesn't:**
+
 - Automated multi-AZ failover (< 60 seconds)
 - Point-in-time recovery (PITR) to any second within the retention window
 - Automated minor version patching
@@ -32,11 +33,13 @@ flowchart LR
 ## When StatefulSets are the right tool
 
 StatefulSets are necessary for distributed systems that require:
+
 - **Stable network identity**: each pod gets a stable DNS name (`kafka-0.kafka.namespace.svc`, `kafka-1.kafka...`) that persists across restarts
 - **Ordered deployment and scaling**: pods are created and deleted in order (0, 1, 2...) — critical for quorum-based systems
 - **Per-pod persistent storage**: each pod gets its own PVC via `volumeClaimTemplates`
 
 **Workloads that belong on StatefulSets:**
+
 - Kafka (brokers need stable identity for partition leadership)
 - Zookeeper (quorum requires stable membership)
 - Cassandra (gossip protocol uses stable hostnames)

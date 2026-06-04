@@ -27,6 +27,7 @@ flowchart TD
 **The deployment paralysis risk**: If the hub cluster is unavailable, no new deployments can reach any spoke. Pods continue running — the data plane is unaffected — but you cannot deploy, rollback, or run automated remediation across the fleet until the hub recovers.
 
 Mitigate hub unavailability:
+
 - Hub cluster must be multi-AZ, multi-replica ArgoCD application controller
 - PodDisruptionBudget on ArgoCD pods (`minAvailable: 1` for each component)
 - Hub itself reconciled by a GitOps controller (ArgoCD manages itself via app-of-apps)

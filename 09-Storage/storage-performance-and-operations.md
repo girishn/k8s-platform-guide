@@ -17,6 +17,7 @@ flowchart TD
 **io2 Block Express is for specific cases**: >16,000 IOPS requirements, applications needing 99.999% volume durability (not just availability), or io2 multi-attach for clustered filesystems. The cost premium (3× gp3) is only justified when you've measured that gp3 is a bottleneck.
 
 **StorageClass per volume type:**
+
 ```yaml
 ---
 apiVersion: storage.k8s.io/v1
@@ -71,6 +72,7 @@ rate(node_cpu_seconds_total{mode="iowait"}[5m]) > 0.1
 ```
 
 Common storage bottlenecks:
+
 - **IOPS saturation**: `iowait` spikes, application latency increases, CloudWatch `VolumeQueueLength` > 1
 - **Throughput saturation**: sequential scan workloads hitting the volume's MiB/s ceiling
 - **Instance-level limits**: the EC2 instance has an EBS bandwidth limit separate from the volume limit — a small instance with a large io2 volume may be instance-limited, not volume-limited
@@ -90,6 +92,7 @@ kubectl patch pvc data-kafka-0 -n kafka \
 The EBS CSI driver calls the AWS ModifyVolume API. The modification takes 60–180 seconds depending on volume size. The filesystem inside the volume is also expanded automatically (ext4, xfs) — no manual `resize2fs` required.
 
 **Constraints:**
+
 - Can only increase size, never decrease (EBS limitation)
 - One modification in progress per volume at a time — don't submit multiple resize operations
 - Some instance types require a detach/reattach cycle for the OS to recognize the new size — verify with a test before relying on online resize in production

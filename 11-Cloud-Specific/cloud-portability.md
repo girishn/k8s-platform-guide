@@ -105,11 +105,13 @@ These are deliberately non-portable. Crossplane provides a portable layer on top
 Not all cloud-specific dependencies are worth abstracting away. The cost of maintaining abstraction layers must be weighed against the likelihood of cloud migration.
 
 **Accept lock-in when:**
+
 - The cloud-specific feature provides significant operational value (EKS Security Groups for Pods, GKE Dataplane V2 observability)
 - Cloud migration is not a realistic near-term scenario
 - The abstraction layer adds more complexity than the lock-in removes
 
 **Document lock-in explicitly** in your platform's architecture decision records:
+
 - "We use EBS-backed StorageClasses; migrating to another cloud requires remapping StorageClass names and migrating PVC data"
 - "We use ACK for RDS provisioning; moving to GKE requires rewriting database provisioning CRDs to use Config Connector"
 

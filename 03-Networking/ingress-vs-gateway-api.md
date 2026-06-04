@@ -81,6 +81,7 @@ flowchart LR
 ```
 
 **Migration strategy:**
+
 1. Install Gateway API CRDs and configure a `GatewayClass` using AWS LBC
 2. New services: use `Gateway` + `HTTPRoute` from the start
 3. Existing services: create parallel `HTTPRoute` resources pointing to the same backends

@@ -17,7 +17,8 @@ flowchart LR
 Changes move between environments via pull requests. A CI pipeline opens a PR to update the image tag in the target environment's directory; a human approves and merges.
 
 **Structure:**
-```
+
+```text
 fleet-config/
 ├── envs/
 │   ├── dev/
@@ -29,6 +30,7 @@ fleet-config/
 ```
 
 **Advantages:**
+
 - Full audit trail: every promotion is a named commit with a reviewer
 - Easy rollback: revert the commit that bumped the image tag
 - Governance gate: required reviewers enforce approval workflow
@@ -86,12 +88,14 @@ flowchart TD
 Automated promotion without testing gates is dangerous — it just moves failures faster.
 
 **Required gates for staging promotion:**
+
 - Unit and integration tests passing in CI
 - Smoke tests against the dev deployment (real K8s, not mocks)
 - Policy compliance: `argocd app diff` to verify rendered manifests match expected state
 - Vulnerability scan on the new image
 
 **For prod promotion additionally:**
+
 - Load test or synthetic traffic validation in staging
 - Approval from service owner (automated request via Slack/PagerDuty)
 - Change window enforcement (no prod deploys during peak hours or freeze periods)

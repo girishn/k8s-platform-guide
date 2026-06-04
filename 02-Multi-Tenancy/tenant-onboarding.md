@@ -24,6 +24,7 @@ flowchart TD
 ```
 
 **Onboarding a new tenant:**
+
 1. PR adds `templates/tenant-new.yaml` to the parent app's chart
 2. ArgoCD detects the new `Application` object and reconciles
 3. Namespace, ResourceQuota, LimitRange, RoleBindings, NetworkPolicy all created automatically
@@ -50,6 +51,7 @@ spec:
 ```
 
 This single object triggers a microcontroller that creates:
+
 1. Kubernetes namespace
 2. ResourceQuota + LimitRange (from size template)
 3. RoleBindings for the team
@@ -118,6 +120,7 @@ PR-based self-service with automated CI validation (quota checks, naming convent
 Offboarding is as important as onboarding — orphaned namespaces accumulate, consuming quota and cluttering audit logs.
 
 Offboarding automation should:
+
 1. Drain workloads (scale deployments to 0, wait for pods to terminate)
 2. Revoke IAM role associations before deleting the namespace
 3. Archive the namespace's audit logs before deletion

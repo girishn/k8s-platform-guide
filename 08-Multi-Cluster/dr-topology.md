@@ -56,6 +56,7 @@ flowchart TD
 ```
 
 **Requirements for active-active:**
+
 - Stateless services: trivially active-active — no data to synchronize
 - Stateful services: require multi-region data replication (Aurora Global Tables, DynamoDB Global Tables, Redis Global Datastore)
 - Identity: services in cluster A must be able to verify the identity of services in cluster B — requires SPIFFE federation (see [cross-cluster-networking.md](cross-cluster-networking.md))

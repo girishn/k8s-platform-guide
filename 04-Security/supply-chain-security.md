@@ -119,6 +119,7 @@ flowchart LR
 ```
 
 **What to scan in CI:**
+
 - CVEs in base image and application dependencies (Trivy, Grype)
 - Secrets accidentally embedded in images (Gitleaks, Trufflehog)
 - Dockerfile best practices (Hadolint)

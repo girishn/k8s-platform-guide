@@ -5,6 +5,7 @@
 By default, Kubernetes allows all pod-to-pod traffic within and across namespaces. Any pod can reach any other pod on the cluster network. This is intentional for developer convenience — and it's the wrong default for multi-tenant production.
 
 Without NetworkPolicy:
+
 - A compromised pod in tenant A can reach tenant B's database
 - Lateral movement across tenant namespaces is unrestricted
 - Egress to the internet from any pod is unrestricted
@@ -81,6 +82,7 @@ flowchart LR
 **At scale**: A cluster with 100 tenants, each with 20 NetworkPolicy rules, generates thousands of iptables entries per node. On high-traffic nodes, iptables rule traversal adds measurable latency (~1–5ms per hop in extreme cases) and consumes CPU.
 
 **eBPF (Cilium)**: Policy is compiled into BPF maps with O(1) lookup time regardless of rule count. The performance advantage becomes significant at:
+
 - 50+ namespaces with policies
 - High-throughput services (>10k RPS per pod)
 - Dense east-west traffic patterns
@@ -155,6 +157,7 @@ This blocks pod creation in any namespace without a NetworkPolicy, ensuring "sha
 Default-deny egress plus explicit allows is stricter than most teams start with. Common production egress policy patterns:
 
 **Allow egress to specific external services:**
+
 ```yaml
 egress:
 - to:

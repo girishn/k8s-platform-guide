@@ -5,6 +5,7 @@
 EKS legacy access used the `aws-auth` ConfigMap to map IAM roles and users to Kubernetes groups. Every human with cluster access needed an IAM role mapped to `system:masters` or a specific group.
 
 At scale this breaks down:
+
 - Mappings are manual — leavers stay in `aws-auth` until someone removes them
 - UUIDs in the Subject field are not human-readable; you can't audit who has what access without cross-referencing IAM
 - One ConfigMap becomes the global access control document for the entire cluster fleet
@@ -61,7 +62,7 @@ With this configuration, a federated user `alice@example.com` becomes `okta:alic
 
 By default, Kubernetes uses the `sub` (subject) claim from the OIDC token as the username. The `sub` is an opaque identifier — typically a UUID.
 
-```
+```text
 # sub claim: hard to audit
 system:serviceaccount or e8f3a2c1-4d5b-11ee-be56-0242ac120002
 

@@ -95,6 +95,7 @@ flowchart LR
 Each service registers with the VPC Lattice service network via a `ServiceExport` (using the Kubernetes Gateway API + AWS LBC). Consuming services use the Lattice-assigned DNS name — no manual endpoint configuration, no VPC peering setup.
 
 **VPC Lattice vs service mesh for cross-cluster traffic:**
+
 - VPC Lattice: AWS-managed, no sidecar overhead, works across EKS/Lambda/ECS, but no L7 policy (HTTP method, header-based rules)
 - Cilium Mesh / Istio with federation: full L7 control and mTLS verification, but requires operating mesh components in every cluster and configuring trust federation
 

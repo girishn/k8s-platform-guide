@@ -107,6 +107,7 @@ BackupPlan:
 ```
 
 AWS Backup captures:
+
 - Kubernetes objects (Deployments, StatefulSets, ConfigMaps, Secrets, CRDs)
 - EBS volumes associated with PVCs
 - Cross-account and cross-region copy for DR
@@ -116,6 +117,7 @@ AWS Backup captures:
 ## Managed database backup: the right default
 
 For RDS and Aurora, AWS handles backup automatically:
+
 - Automated daily snapshots with configurable retention (up to 35 days)
 - Transaction logs continuously backed up — PITR to any second within retention
 - Cross-region automated backups for DR

@@ -32,6 +32,7 @@ CA requires node groups (ASGs) to exist before it can scale. The instance types 
 ## Karpenter: groups-less provisioning
 
 Karpenter replaces the node group layer entirely. When pods are pending, Karpenter:
+
 1. Aggregates the resource requirements of all pending pods
 2. Selects the most cost-effective instance type from the full AWS catalog that fits them
 3. Launches the instance directly via EC2 API
@@ -71,6 +72,7 @@ CA is not wrong — it's mature and well-understood. Karpenter is better for gre
 Running both simultaneously is supported but operationally noisy — both may try to provision for the same pending pods.
 
 Migration approach:
+
 1. Install Karpenter alongside CA
 2. Apply `karpenter.sh/do-not-disrupt: "true"` annotation to CA-managed nodes
 3. Configure Karpenter NodePools with taints; gradually move workloads to tolerate them

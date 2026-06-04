@@ -26,6 +26,7 @@ Autopilot is Google's closest equivalent to EKS Auto Mode. Google manages the en
 **When Autopilot is appropriate**: most stateless workloads without custom node requirements. The billing model incentivizes accurate resource requests — over-requesting wastes money directly, not just capacity.
 
 **Autopilot constraints**:
+
 - No DaemonSets (Google manages the equivalent functionality)
 - No privileged containers
 - Limited node customization — custom kernel parameters and third-party drivers are not supported
@@ -34,6 +35,7 @@ Autopilot is Google's closest equivalent to EKS Auto Mode. Google manages the en
 ### GKE Standard mode
 
 Full control over node pool configuration. Required for:
+
 - Workloads needing custom kernel modules or GPU drivers
 - DaemonSets for platform agents (eBPF tools, security sensors)
 - Specific instance types not in Autopilot's catalog

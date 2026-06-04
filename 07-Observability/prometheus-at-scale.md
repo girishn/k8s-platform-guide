@@ -25,6 +25,7 @@ flowchart LR
 ```
 
 **Why remote write wins at fleet scale:**
+
 - Federation requires the global Prometheus to query every per-cluster instance on its scrape interval — at 20 clusters with 30s intervals, this is constant fan-out load
 - Federation only ships aggregated/recorded metrics to the global view; raw metrics stay local — cross-cluster debugging requires knowing which cluster to query
 - Remote write streams raw metrics continuously; the central store has full fidelity
@@ -58,12 +59,14 @@ remoteWrite:
 Cardinality is the number of unique time series. A metric with labels `{namespace, pod, container, http_method, http_status_code}` has cardinality = `namespaces × pods × containers × methods × status_codes`. Adding a label with high-variance values (request ID, user ID, trace ID) explodes cardinality.
 
 **Cardinality explosion sources in Kubernetes:**
+
 - Per-pod metrics without aggregation (100 pods = 100 time series per metric)
 - Kubernetes labels propagated as metric labels (uncontrolled label cardinality)
 - Istio/Envoy per-route metrics with URL path in the label (unique paths = unique series)
 - GitOps controllers emitting metrics per reconciled resource (many resources = many series)
 
 **Detection:**
+
 ```promql
 # Top metrics by cardinality
 topk(20, count by (__name__)({__name__=~".+"}))
@@ -76,6 +79,7 @@ topk(20, count by (__name__)({__name__=~".+"}))
 ```
 
 **Mitigation:**
+
 ```yaml
 # Drop high-cardinality labels at scrape time
 metric_relabel_configs:
@@ -107,6 +111,7 @@ processors:
 ```
 
 Or in Prometheus `external_labels`:
+
 ```yaml
 global:
   external_labels:

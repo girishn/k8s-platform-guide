@@ -33,6 +33,7 @@ flowchart LR
 ## When HPA on StatefulSets is safe
 
 Some stateful applications support dynamic member addition and graceful removal:
+
 - Read replicas of databases (Postgres replicas, Redis replicas)
 - Worker pools with no cross-pod coordination
 - Stateless-ish applications using StatefulSet only for stable DNS hostnames
@@ -112,6 +113,7 @@ Never use `whenScaled: Delete` for production stateful services — data loss is
 Kafka brokers are StatefulSets with partitions assigned per broker. Adding a broker doesn't rebalance partitions automatically — you must trigger a partition reassignment. Removing a broker without rebalancing first causes under-replicated partitions or data loss.
 
 **Safe Kafka scale-up pattern:**
+
 1. Scale StatefulSet replicas up (new broker joins cluster)
 2. Run partition reassignment tool to distribute partitions to new broker
 3. Verify replica sync completes before considering the scale-up done

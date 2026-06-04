@@ -63,6 +63,7 @@ flowchart LR
 The log collector must enrich every log line with Kubernetes metadata before shipping. Without enrichment, a log line from pod `payments-api-7f9d4b-xk2p9` has no namespace, no deployment name, no team label.
 
 **FluentBit kubernetes filter:**
+
 ```ini
 [FILTER]
     Name             kubernetes
@@ -81,6 +82,7 @@ This adds `kubernetes.namespace_name`, `kubernetes.pod_name`, `kubernetes.contai
 Log volume can spike unexpectedly — a debug logging mode left on in production, a crash loop generating thousands of stack traces per second, a verbose library. Without controls, this creates cost spikes and can overwhelm the collector.
 
 **Rate limiting in FluentBit:**
+
 ```ini
 [FILTER]
     Name    throttle
@@ -113,7 +115,7 @@ flowchart LR
 
 Partition S3 log objects by `year/month/day/namespace` — this makes Athena queries significantly cheaper by limiting the data scanned:
 
-```
+```text
 s3://logs-bucket/year=2024/month=01/day=15/namespace=payments/logs.parquet
 ```
 

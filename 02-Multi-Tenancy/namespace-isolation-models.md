@@ -18,11 +18,13 @@ flowchart LR
 Tenants share the cluster control plane, data plane, and often node compute. Isolation is enforced via RBAC, ResourceQuotas, NetworkPolicy, and Pod Security Admission.
 
 **When it works:**
+
 - Up to ~100 engineers on the platform
 - Internal teams with a common trust baseline (employees, not external customers)
 - Fast onboarding is a priority
 
 **Where it breaks down:**
+
 - Namespace RBAC doesn't prevent API server-level abuse (e.g., listing secrets in other namespaces via a misconfigured ClusterRole)
 - A noisy-neighbor workload can saturate shared node resources despite quotas if LimitRanges aren't tuned
 - A shared GitOps controller failure creates **deployment paralysis** — every tenant is blocked simultaneously
@@ -33,6 +35,7 @@ Tenants share the cluster control plane, data plane, and often node compute. Iso
 Each tenant (or tenant group) gets a dedicated cluster. The data plane is physically isolated; a compromise in one cluster cannot propagate to another.
 
 **When it's required:**
+
 - Regulated workloads (HIPAA, PCI-DSS, SOC 2 Type II) where auditors require data plane separation
 - 200+ engineers where namespace sprawl and policy drift become unmanageable
 - External-facing tenants (SaaS product serving end customers) — a shared cluster is generally not acceptable

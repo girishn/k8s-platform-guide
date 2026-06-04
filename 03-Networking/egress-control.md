@@ -57,6 +57,7 @@ spec:
 ```
 
 **Security risk — label manipulation:** Egress policy trusts pod labels. If RBAC allows a developer to set `tenant=payments` on any pod, that pod gains payments' egress privileges. Mitigate with:
+
 - Admission webhooks that validate label ownership (only the payments team can deploy pods with `tenant=payments`)
 - OPA/Kyverno policy that enforces label-to-namespace mapping
 
@@ -74,6 +75,7 @@ flowchart LR
 ```
 
 **Capabilities:**
+
 - FQDN-based allowlisting (`payments.stripe.com`, `api.github.com`) — not just IPs
 - SNI inspection for TLS connections (hostname visible without decryption)
 - HTTP header and method enforcement

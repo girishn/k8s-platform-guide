@@ -11,11 +11,13 @@ On EKS, you have three practical options: AWS VPC CNI (default), Calico, or Cili
 Pods get real VPC IP addresses from the node's ENI secondary IPs. Pod-to-pod traffic routes natively through the VPC without overlay or encapsulation.
 
 **Advantages:**
+
 - Native VPC integration: Security Groups for Pods, VPC flow logs, VPC routing all work at the pod level
 - No overlay overhead: traffic takes the VPC fast path
 - First-class AWS support and EKS add-on lifecycle management
 
 **Limitations:**
+
 - IP exhaustion: each node consumes a slot of ENI secondary IPs. Dense clusters in small subnets run out of IPs. Mitigate with custom networking (separate subnet for pods) or IPv6
 - NetworkPolicy enforcement requires the separately enabled Network Policy controller add-on (GA since EKS 1.25). Without it, `NetworkPolicy` objects are silently ignored
 - No eBPF datapath: policy enforcement runs on iptables — O(n) rule traversal
@@ -36,11 +38,13 @@ flowchart LR
 ```
 
 **Advantages:**
+
 - Mature, well-understood operational model
 - Wide CNI support across cloud and on-prem
 - Calico Enterprise adds egress gateway, DNS policy, and Wireguard encryption
 
 **Limitations:**
+
 - iptables rule evaluation degrades with scale: 1000+ NetworkPolicy rules across many namespaces causes measurable latency and CPU overhead on the kernel's conntrack table
 - Overlay modes add encapsulation overhead vs native VPC routing
 
@@ -60,11 +64,13 @@ flowchart LR
 ```
 
 **Performance characteristics:**
+
 - Policy evaluation: O(1) BPF map lookup vs O(n) iptables traversal
 - Measured latency: 0.1–0.2ms per hop vs 1–5ms for iptables at high rule counts
 - Conntrack table replaced by BPF maps — no kernel conntrack overhead
 
 **Additional capabilities beyond NetworkPolicy:**
+
 - Layer 7 policy (HTTP method, path, headers, gRPC service/method)
 - Network-level mTLS without sidecars (via Cilium Mesh + SPIRE)
 - Hubble observability: real-time flow visibility and policy decision logging
@@ -72,6 +78,7 @@ flowchart LR
 - WireGuard node-to-node encryption (transparent, no certificates to manage)
 
 **Limitations:**
+
 - Requires Linux kernel ≥ 5.10 for full feature set (EKS Amazon Linux 2023 satisfies this; check custom AMIs)
 - More complex to operate than VPC CNI; Hubble and Cilium Operator add components
 - Replacing AWS VPC CNI on an existing cluster is disruptive — plan for blue-green migration

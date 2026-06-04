@@ -36,12 +36,14 @@ At 200+ engineers, multiple clusters become essential for policy enforcement con
 Two common models:
 
 **Cluster per environment (recommended for prod isolation)**:
+
 - dev, staging, prod each have dedicated clusters
 - Blast radius of a bad deployment or cluster misconfiguration is scoped to one environment
 - Separate RBAC, separate IAM roles, separate audit log streams
 - Higher cost: N×cluster_fee
 
 **Namespace per environment (acceptable for dev/staging)**:
+
 - dev and staging namespaces share a cluster
 - Simpler to manage, lower cost
 - Acceptable when dev/staging compromise doesn't threaten production
@@ -69,11 +71,13 @@ flowchart TD
 ```
 
 **Pros**:
+
 - Single pane of glass: deployment status, policy compliance, and cost attribution visible in one place
 - Simplified identity federation: IAM Identity Center groups mapped once at the hub, propagated to spokes
 - Centralized secret distribution and certificate management
 
 **Cons**:
+
 - Hub is a SPOF for all deployment activity. Hub unavailability doesn't take down running workloads — pods keep running — but no new deployments, no scaling events triggered by GitOps, no automated remediation across the fleet
 - Hub capacity must scale with fleet size: ArgoCD controller memory grows with number of managed resources
 
@@ -98,17 +102,20 @@ flowchart TD
 ```
 
 **Pros**:
+
 - Hub failure scope is limited: if the management infrastructure for cluster A fails, cluster B is unaffected
 - Deployment continuity is independent per cluster
 - Simpler mental model for cluster owners: "my cluster, my controllers"
 
 **Cons**:
+
 - Policy drift risk: ensuring consistent Gatekeeper/Kyverno policies across 20 independent clusters requires discipline
 - Requires hierarchical Git structure: a `/common` directory with immutable policy catalogs that all clusters consume, enforced by Git branch protection
 - Debugging "why did this cluster behave differently" is harder without a central view
 
 **Flat fleet Git structure**:
-```
+
+```text
 fleet-config/
 ├── common/          # All clusters must apply this — branch-protected
 │   ├── policies/
@@ -122,6 +129,7 @@ fleet-config/
 ## Decision rule
 
 Start with hub-and-spoke. It's operationally simpler and the right default for fleets under 20 clusters. Move to flat fleet when:
+
 - Hub unavailability has caused production deployment failures (not just hub unavailability itself, but the downstream impact)
 - The fleet is large enough that hub capacity becomes a scaling concern
 - Cluster teams are mature enough to own local controllers without drifting from policy

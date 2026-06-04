@@ -30,6 +30,7 @@ Create a new cluster at the target version, migrate workloads, cut over DNS and 
 **Safe practice**: New clusters should always have a new, distinct OIDC issuer URL. Update IAM role trust policies explicitly to include the new issuer. Never reuse the old issuer URL on a new cluster.
 
 **Migration sequence for blue-green**:
+
 1. Provision new cluster at target version with distinct OIDC issuer
 2. Update IAM role trust policies to add new issuer (old issuer remains — parallel trust)
 3. Deploy workloads to new cluster, validate with shadow traffic or synthetic probes

@@ -74,7 +74,7 @@ AWS Compute Savings Plans commit to a $/hour spend in exchange for a discount on
 
 If you have a $500/hour Savings Plan, your on-demand NodePool limits should be sized to consume ~$500/hour at steady state before overflowing to spot. Under-consuming the commitment means paying for unused savings plan capacity.
 
-```
+```text
 On-demand baseline → Savings Plan coverage
 Spot burst → no savings plan coverage, but 60-80% cheaper than on-demand
 ```
@@ -114,6 +114,7 @@ spec:
 During large-scale events (fleet-wide spot interruption, mass HPA scale-out), Karpenter and the Kubernetes scheduler both make high volumes of API calls. AWS EC2 and EKS APIs have per-region rate limits.
 
 **Mitigation:**
+
 - Karpenter batches pod evaluation — it doesn't provision one node per pending pod but evaluates all pending pods together and provisions the minimum set
 - Set `--batch-max-duration` and `--batch-idle-duration` in Karpenter to tune batching aggressiveness
 - Spread workloads across AZs — concentrated AZ deployments amplify spot interruption storms

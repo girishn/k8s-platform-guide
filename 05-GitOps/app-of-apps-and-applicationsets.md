@@ -20,6 +20,7 @@ flowchart TD
 ```
 
 **Adding a new tenant:**
+
 1. PR adds `apps/new-tenant.yaml` to the parent directory
 2. ArgoCD detects the new Application and reconciles
 3. Namespace, RBAC, quotas, NetworkPolicy created automatically
@@ -126,6 +127,7 @@ flowchart LR
 ```
 
 **Required safety gates before using ApplicationSets in production:**
+
 - CI validation on every commit to shared templates (render + dry-run with `argocd app diff`)
 - Integration tests using `kuttl` or Kyverno Chainsaw that validate rendered manifests against policy
 - Branch protection on the repository with required review before merge to main

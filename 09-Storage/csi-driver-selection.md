@@ -17,6 +17,7 @@ flowchart TD
 EBS provides block storage — a virtual disk attached to a single EC2 instance at a time. It is the right choice for any workload with high IOPS requirements: relational databases, message brokers, time-series databases.
 
 **Key constraints:**
+
 - **Single AZ**: an EBS volume exists in one AZ. The pod using it must run in the same AZ. Use `WaitForFirstConsumer` binding mode to enforce co-location.
 - **Single node attach**: one EBS volume can only be attached to one EC2 instance at a time. `ReadWriteOnce` access mode enforces this at the Kubernetes layer.
 - **Multi-attach (io2 only)**: io2 volumes support multi-attach to up to 16 instances in the same AZ — but this requires the application to handle concurrent access correctly (clustered filesystems only). Not a substitute for RWX shared storage.
@@ -42,11 +43,13 @@ parameters:
 EFS provides an NFS-based shared filesystem accessible from multiple pods across nodes and AZs simultaneously.
 
 **When EFS is appropriate:**
+
 - Multiple pods need read/write access to the same files concurrently
 - Workloads that use file locking or expect POSIX filesystem semantics with shared access
 - Shared build caches, CI/CD artifact stores, configuration shared across pods
 
 **EFS performance model:**
+
 - Throughput scales with storage consumed in bursting mode — small filesystems have low burst throughput
 - Provisioned throughput: pay for dedicated throughput regardless of storage size — necessary for consistent performance
 - Latency: 1–3ms vs EBS <1ms — not suitable for latency-sensitive databases
@@ -68,6 +71,7 @@ EFS Access Points provide namespace-level isolation between tenants — each PVC
 ## S3: object storage — not a filesystem
 
 A CSI driver for S3 (Mountpoint for Amazon S3 CSI) exists and mounts S3 buckets as a filesystem. **Avoid this for production application workloads** that expect standard POSIX filesystem semantics:
+
 - No atomic renames (rename is copy + delete)
 - No file locking
 - Eventual consistency on list operations

@@ -57,6 +57,7 @@ These require L7 awareness, which means a proxy — either sidecar-based (Istio,
 ## When NetworkPolicy alone is sufficient
 
 NetworkPolicy is the right tool when:
+
 - Your security model needs L3/L4 microsegmentation (isolate namespaces, control which services can communicate)
 - You don't need to verify workload identity cryptographically
 - Your traffic is not HTTP-based or you don't need L7 enforcement
@@ -99,6 +100,7 @@ When transparent mTLS encrypts all east-west traffic, traditional network tap an
 This is a production readiness requirement that's easy to miss until a security incident requires forensic reconstruction.
 
 **Mitigations:**
+
 - **Hubble (Cilium)**: exports eBPF-level flow decisions (connection allowed/denied, identity) to a central store even for encrypted traffic
 - **Envoy access logs (Istio/Linkerd)**: proxy logs include request metadata (method, path, source identity, response code) without decrypting payload
 - Export these logs to your SIEM before you need them in an incident

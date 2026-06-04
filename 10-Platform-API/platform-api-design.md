@@ -119,6 +119,7 @@ spec:
 ```
 
 Common policies on platform CRDs:
+
 - **Naming conventions**: enforce `{team}-{service}-{env}` bucket names, RDS identifiers
 - **Size caps**: prevent developers from requesting oversized instances without approval
 - **Allowed regions**: prevent provisioning in non-compliant regions

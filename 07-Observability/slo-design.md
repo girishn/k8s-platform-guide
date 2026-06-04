@@ -19,6 +19,7 @@ flowchart LR
 Platform teams make the mistake of measuring infrastructure health instead of developer outcomes. A platform where all nodes are healthy but developers can't deploy is failing its customers.
 
 **Vanity metrics (avoid as SLOs):**
+
 - Node uptime %
 - Control plane availability %
 - "No incidents this week"
@@ -57,6 +58,7 @@ A rising exemption rate against an SLO target makes the cost visible: "we've con
 ## Multi-window burn rate alerting
 
 Standard threshold alerting on error rate misses two critical patterns:
+
 - **Fast burn**: error rate spikes to 50% for 10 minutes — burns through hours of error budget quickly
 - **Slow burn**: error rate is 0.5% above the SLO threshold for days — never triggers a threshold alert but silently exhausts the budget
 
@@ -103,11 +105,13 @@ The two-window requirement (short AND long) prevents false positives from brief 
 ## Symptom-based vs cause-based alerting
 
 **Cause-based (noisy, low signal):**
+
 - CPU > 80% on a node
 - Memory usage > 75% on a pod
 - etcd leader election detected
 
 **Symptom-based (actionable, high signal):**
+
 - Error rate on payments API exceeds SLO threshold
 - P99 latency for checkout flow exceeds 500ms
 - New namespace provisioning taking > 5 minutes

@@ -64,6 +64,7 @@ flowchart LR
 ## Cloud service integration depth
 
 Managed Kubernetes provides first-party controllers for cloud primitives:
+
 - AWS Load Balancer Controller (ALB/NLB provisioning from Ingress/Service)
 - EBS/EFS CSI drivers (maintained by AWS, tested against EKS versions)
 - Azure Disk/File CSI (AKS-maintained)

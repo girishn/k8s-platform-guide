@@ -19,6 +19,7 @@ flowchart TD
 ```
 
 **Default to `Role` + `RoleBinding`.** Grant `ClusterRole` only for:
+
 - Resources that are genuinely cluster-scoped (nodes, PVs, namespaces, CRDs)
 - Platform operators that must act across all namespaces (monitoring scrapers, GitOps controllers)
 
@@ -46,6 +47,7 @@ flowchart LR
 ```
 
 **Enforce at the platform level:**
+
 - Kyverno policy: require `serviceAccountName` to be explicitly set on all Deployments/StatefulSets
 - Kyverno policy: block pods using `default` ServiceAccount in production namespaces
 - Disable auto-mount of service account tokens where not needed: `automountServiceAccountToken: false`
@@ -72,6 +74,7 @@ automountServiceAccountToken: false  # explicit opt-in per pod when needed
 3. **Helm operators**: Some Helm chart deployments request `cluster-admin` in their RBAC. Review and scope down to what's actually required.
 
 **Audit for ClusterAdmin exposure:**
+
 ```bash
 # Find all ClusterRoleBindings to cluster-admin
 kubectl get clusterrolebindings -o json | \
@@ -83,6 +86,7 @@ kubectl get clusterrolebindings -o json | \
 **Principle**: each workload should have exactly the permissions it needs to function, nothing more. The operational challenge is discovering what those permissions are.
 
 Practical approach for new workloads:
+
 1. Start with no permissions
 2. Run the workload and capture permission errors from audit logs
 3. Grant the specific permissions that triggered errors

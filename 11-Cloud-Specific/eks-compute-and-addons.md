@@ -16,6 +16,7 @@ flowchart TD
 ### EKS Auto Mode
 
 Auto Mode is the no-ops compute tier introduced in 2024. AWS fully manages:
+
 - Node provisioning and lifecycle (backed by Karpenter internally)
 - Node AMI updates and patching
 - EBS storage provisioning for PVCs
@@ -30,6 +31,7 @@ Platform teams configure workload requirements (resource requests, node selector
 ### Managed Node Groups
 
 AWS handles node replacement events (spot interruptions, AZ rebalancing) and applies OS patches via AMI updates. Platform teams retain control over:
+
 - AMI selection (Amazon Linux 2023 vs Bottlerocket vs custom)
 - Instance type selection and on-demand/spot mix
 - Upgrade timing (when to roll the node group to a new AMI)
@@ -39,6 +41,7 @@ Managed Node Groups integrate with Karpenter — the preferred compute autoscale
 ### Self-managed nodes
 
 Full control over the node lifecycle — AMI builds, OS patching, kubelet configuration. The "hidden tax" is substantial: dedicated engineering time for building and testing custom AMIs, monitoring OS CVEs, and executing upgrade runbooks. Only justified for:
+
 - Custom AMIs with specific kernel modules or drivers
 - EKS Anywhere (hybrid on-prem nodes)
 - Regulatory requirements mandating specific OS configurations

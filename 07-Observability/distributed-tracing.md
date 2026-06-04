@@ -29,6 +29,7 @@ metadata:
 This instruments HTTP clients, gRPC, database drivers, and AWS SDK calls — the most common span sources — without developer involvement. The tradeoff: auto-instrumentation can't capture business-level context (user ID, order ID, tenant ID). Manual span attributes are required for that.
 
 **Manual instrumentation**: developers add spans, attributes, and events using the OTel SDK. Required for:
+
 - Business-level trace context (`order_id`, `tenant_id`, `feature_flag`)
 - Internal logic tracing (what decision was made, not just which service was called)
 - Async operations (queue processing, background jobs)
@@ -52,10 +53,12 @@ flowchart TD
 ```
 
 **Head-based sampling**: the decision to sample is made at the first span (ingress). If sampled, all downstream spans in the trace carry the decision. Simple to implement; configured per service or globally.
+
 - Pro: low overhead, no buffering required
 - Con: blind to errors — a request sampled as "discard" at the start won't be captured even if it later fails
 
 **Tail-based sampling**: collect all spans in a buffer, make the keep/drop decision when the root span closes (after seeing the full trace).
+
 - Pro: can capture 100% of error traces and high-latency traces while dropping healthy ones
 - Con: requires buffering — the OTel Collector gateway holds spans in memory until the trace completes, adding latency and memory overhead
 - Requires all spans for a trace to arrive at the same collector instance (sticky routing or trace-aware load balancing)
@@ -86,6 +89,7 @@ This captures 100% of errors, 100% of slow requests, and a 5% baseline of health
 Trace cost has two components: storage and network transfer.
 
 **Network transfer**: spans travel from application pods to collector to backend. In EKS, inter-AZ traffic and NAT Gateway egress both cost money. At 1000 RPS with 10 spans per trace and 1 KB per span:
+
 - 10 MB/s of trace data
 - ~864 GB/day
 - ~$38/day in NAT Gateway costs alone (at $0.045/GB)
@@ -99,6 +103,7 @@ Sampling aggressively reduces this. Going from 100% to 5% head-based sampling re
 Distributed tracing only works if trace context propagates across service boundaries. Without W3C TraceContext headers, each service creates a new root span and traces are disconnected.
 
 Platform requirements:
+
 - Standardize on W3C TraceContext (`traceparent` header) — not proprietary formats
 - Ensure all HTTP clients and gRPC stubs propagate headers automatically (auto-instrumentation handles this for common frameworks)
 - Include `traceId` in structured log output — links logs to traces for correlated debugging

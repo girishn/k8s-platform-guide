@@ -38,6 +38,7 @@ flowchart LR
 ```
 
 **Capabilities:**
+
 - mTLS between all services (SPIFFE/SPIRE certificates)
 - L7 traffic management: weighted routing, retries, timeouts, circuit breaking, fault injection
 - Ingress and egress gateways
@@ -45,6 +46,7 @@ flowchart LR
 - JWT/OIDC validation at the proxy layer
 
 **Costs:**
+
 - **Sidecar overhead**: each Envoy proxy consumes ~50–100 MiB memory and ~0.1–0.5 vCPU under load, per pod
 - **First-packet latency**: mTLS handshake adds latency on new connection establishment
 - **Operational complexity**: istiod, CRDs, webhook injector, gateway pods — significant surface area
@@ -73,6 +75,7 @@ flowchart LR
 ```
 
 **Advantages:**
+
 - No per-pod sidecar: eliminates the memory/CPU tax on application pods
 - Identity via SPIRE: cryptographic workload identity without sidecar lifecycle management
 - eBPF-native: policy evaluation in kernel, not userspace proxy
@@ -80,6 +83,7 @@ flowchart LR
 - Single CNI + mesh stack (no two systems to operate)
 
 **Limitations:**
+
 - Requires Cilium as the CNI — not an add-on to an existing CNI
 - L7 traffic management is less mature than Istio (Cilium's `Ingress` and `HTTPRoute` via Envoy gateway are improving but not at Istio's depth)
 - Smaller production footprint than Istio; fewer reference architectures
@@ -91,12 +95,14 @@ flowchart LR
 Linkerd uses lightweight Rust-based micro-proxies (not Envoy) as sidecars, with a significantly smaller per-pod resource footprint than Istio.
 
 **Advantages:**
+
 - ~10 MiB per sidecar vs ~50–100 MiB for Envoy — meaningful at scale
 - Simpler operational model than Istio (fewer CRDs, simpler control plane)
 - Automatic mTLS with no configuration required after install
 - Strong default observability (golden metrics out of the box)
 
 **Limitations:**
+
 - Less L7 traffic management capability than Istio
 - No built-in egress gateway
 - Smaller ecosystem and fewer integrations
@@ -121,6 +127,7 @@ Linkerd uses lightweight Rust-based micro-proxies (not Envoy) as sidecars, with 
 Transparent mTLS means packet capture tools see only encrypted bytes. This is true for all three mesh options.
 
 **Required for production:**
+
 - **Istio**: enable Envoy access logging; export to SIEM. Access logs include source identity, method, path, response code — without decrypting payload.
 - **Cilium/Hubble**: configure Hubble to export flow events (policy verdicts, connection metadata) to Elasticsearch or S3.
 - **Linkerd**: tap and access logs provide request metadata.

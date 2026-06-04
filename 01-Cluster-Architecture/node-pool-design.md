@@ -64,6 +64,7 @@ flowchart TD
 **Nitro-based instances** (M5n, R5n, C5n, and most current-gen types) provide automatic hardware-level encryption for traffic between instances — no application-layer overhead. For regulated industries where in-transit encryption is mandated, selecting Nitro instances satisfies the requirement without a service mesh.
 
 Instance selection checklist for production node pools:
+
 - Nitro for encryption-at-transit requirements
 - Memory-optimized (R-series) for JVM workloads or in-memory caches
 - Compute-optimized (C-series) for CPU-bound services
@@ -76,6 +77,7 @@ EKS Pod Identity works via a node-local DaemonSet agent. When a pod needs AWS cr
 **Failure mode**: If the Pod Identity agent DaemonSet fails on a specific node (crash loop, OOM, node-local resource exhaustion), all pods on that node silently lose AWS IAM access. The pod continues running; AWS SDK calls fail with auth errors. This is not surfaced as a pod health issue unless you have explicit application-level health checks on AWS API availability.
 
 **Mitigations**:
+
 - Liveness and readiness probes on the Pod Identity agent DaemonSet — configure aggressive restart thresholds
 - Automated node draining triggered by agent health failures
 - Application-level metrics on AWS SDK call failure rates, not just pod status

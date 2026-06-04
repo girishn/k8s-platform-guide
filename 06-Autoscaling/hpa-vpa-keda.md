@@ -69,6 +69,7 @@ spec:
 ```
 
 **Modes:**
+
 - `Off`: generates recommendations in `.status.recommendation` — read-only, no mutations
 - `Initial`: applies recommendations only at pod creation, not to running pods
 - `Auto`: evicts and restarts pods to apply new resource settings — disrupts running workloads
@@ -90,6 +91,7 @@ flowchart TD
 KEDA extends HPA to support external event sources as scaling triggers. It creates and manages an HPA under the hood — KEDA is not a replacement for HPA, it's a superset.
 
 Scale triggers KEDA supports natively:
+
 - SQS queue depth
 - Kafka consumer group lag
 - Prometheus query result

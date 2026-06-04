@@ -95,6 +95,7 @@ flowchart TD
 **Trust bundle exchange**: each intermediate SPIRE server shares its public key (trust bundle) with all others. Private keys never leave the cluster. Services in cluster A can verify a certificate issued by cluster B's SPIRE using the trust bundle — without trusting cluster B's private key.
 
 **Workload verification flow**:
+
 1. Service A (cluster A) presents its SPIFFE SVID to service B (cluster B)
 2. Service B validates the SVID signature against cluster A's trust bundle
 3. Mutual TLS established — both parties verified
@@ -105,7 +106,7 @@ This works across regions, accounts, and any network boundary, as long as the TL
 
 SPIFFE trust domain names are DNS names. IANA DNS specification limits labels (components between dots) to 63 characters, but the operational constraint for nested SPIRE is more specific: cluster identifiers embedded in trust domain names should be **7 characters or fewer** to avoid exceeding limits when combined with namespace and service account components.
 
-```
+```text
 # Safe: cluster identifier is short
 spiffe://cluster-a.example.com/ns/payments/sa/payments-api
 
