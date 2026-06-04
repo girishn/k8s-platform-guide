@@ -52,7 +52,40 @@ flowchart LR
 - **Operational complexity**: istiod, CRDs, webhook injector, gateway pods — significant surface area
 - **Version upgrades**: Istio minor version upgrades require careful coordination with sidecar versions
 
-**When to use Istio:** You need the full feature set — especially L7 traffic management for complex canary rollouts, fault injection for chaos engineering, or egress gateway with FQDN filtering. Teams with Envoy expertise.
+**When to use Istio (sidecar):** You need the full L7 feature set for complex canary rollouts, fault injection, or egress gateway with FQDN filtering — and have Envoy expertise. For new Istio deployments, evaluate Ambient mode first.
+
+## Istio Ambient mode
+
+Ambient mode is Istio's sidecarless architecture, production-ready in 2026. It splits the mesh into two layers:
+
+```mermaid
+flowchart TD
+    subgraph node["Node (any node)"]
+        ZT["ztunnel DaemonSet\nL4 mTLS + SPIFFE identity\nfor all pods on this node"]
+    end
+
+    subgraph ns["Namespace (optional L7)"]
+        WP["Waypoint proxy\nper-namespace Envoy\nonly needed for L7 features"]
+    end
+
+    subgraph pods["Pods (no sidecar injection)"]
+        A["Pod A"]
+        B["Pod B"]
+    end
+
+    A & B <-->|"transparent L4 mTLS\nvia ztunnel"| ZT
+    ZT <-->|"only if HTTPRoute / AuthorizationPolicy\nrequires L7 inspection"| WP
+```
+
+**ztunnel** (per-node DaemonSet): handles L4 mTLS and SPIFFE identity for all pods on the node. No sidecar injection — pods restart-free during mesh upgrades.
+
+**Waypoint proxy** (per-namespace, opt-in): an Envoy proxy deployed only when a namespace needs L7 features (weighted routing, retries, JWT validation). Namespaces that only need mTLS run ztunnel only.
+
+**Resource impact**: the sidecar model in a 1,000-pod cluster consumes ~70 GB of memory for proxy containers alone. Ambient reduces this to a few hundred MB (one ztunnel per node, Waypoint proxies only where needed).
+
+**Latency**: Ambient P50 inter-service latency is ~2.1 ms vs ~3.8 ms in sidecar mode. P99 is 3–5 ms (sidecar) vs slightly lower in Ambient depending on workload.
+
+**When to use Istio Ambient:** New Istio deployments in 2026. Teams that previously ruled out Istio due to sidecar overhead should re-evaluate Ambient — it eliminates the per-pod memory tax while retaining full Istio L7 capabilities where needed.
 
 ## Cilium Mesh (sidecarless mTLS)
 
@@ -82,11 +115,15 @@ flowchart LR
 - Hubble integration: flow-level observability natively
 - Single CNI + mesh stack (no two systems to operate)
 
+**Cilium node-to-node encryption**: Cilium also supports WireGuard or IPsec encryption at the node level — independent of the service mesh layer. This encrypts all pod-to-pod traffic on the wire, including traffic from non-mesh-aware services, without any proxy. Use this as a complement to (or instead of) mTLS for network-layer encryption.
+
+**Performance**: Cilium adds 0.5–1 ms P99 latency (eBPF socket-layer interception, no user-space proxy hop) and ~10–15 MB per node (not per pod).
+
 **Limitations:**
 
 - Requires Cilium as the CNI — not an add-on to an existing CNI
 - L7 traffic management is less mature than Istio (Cilium's `Ingress` and `HTTPRoute` via Envoy gateway are improving but not at Istio's depth)
-- Smaller production footprint than Istio; fewer reference architectures
+- Troubleshooting kernel-level eBPF programs requires Linux kernel expertise that user-space proxy debugging does not
 
 **When to use Cilium Mesh:** Greenfield clusters already using Cilium CNI that need mTLS and basic L7 policy without the sidecar tax. Right choice when reducing compute overhead is a priority and Istio's advanced L7 features aren't required.
 
@@ -96,7 +133,7 @@ Linkerd uses lightweight Rust-based micro-proxies (not Envoy) as sidecars, with 
 
 **Advantages:**
 
-- ~10 MiB per sidecar vs ~50–100 MiB for Envoy — meaningful at scale
+- 15–25 MB per sidecar vs 50–100 MB for Envoy — meaningful at scale; P99 latency under 1–2 ms
 - Simpler operational model than Istio (fewer CRDs, simpler control plane)
 - Automatic mTLS with no configuration required after install
 - Strong default observability (golden metrics out of the box)
@@ -111,16 +148,18 @@ Linkerd uses lightweight Rust-based micro-proxies (not Envoy) as sidecars, with 
 
 ## Decision matrix
 
-| Factor | Istio | Cilium Mesh | Linkerd |
-|---|---|---|---|
-| mTLS | Yes | Yes (SPIRE) | Yes |
-| L7 traffic management depth | High | Medium (improving) | Low–Medium |
-| Sidecar required | Yes (Envoy) | No | Yes (Rust micro-proxy) |
-| Per-pod memory overhead | High (~100 MiB) | None | Low (~10 MiB) |
-| Egress gateway | Yes | Partial | No |
-| Observability | Rich (Envoy metrics) | Hubble (flow-level) | Golden metrics |
-| Operational complexity | High | Medium (if using Cilium CNI) | Low–Medium |
-| Requires specific CNI | No | Yes (Cilium) | No |
+| Factor | Istio (sidecar) | Istio Ambient | Cilium Mesh | Linkerd |
+|---|---|---|---|---|
+| mTLS | Yes | Yes | Yes (SPIRE / WireGuard) | Yes |
+| L7 traffic management depth | High | High (via Waypoint) | Medium (improving) | Low–Medium |
+| Sidecar required | Yes (Envoy) | No | No | Yes (Rust micro-proxy) |
+| Per-pod memory overhead | ~50–100 MB | None (ztunnel per node) | ~10–15 MB per node | 15–25 MB per pod |
+| P99 latency per hop | 3–5 ms | ~2 ms | 0.5–1 ms | 1–2 ms |
+| Egress gateway | Yes | Yes | Partial | No |
+| Observability | Rich (Envoy metrics) | Rich (Envoy + Hubble) | Hubble (flow-level) | Golden metrics |
+| Operational complexity | High | Medium | Medium (requires Cilium CNI) | Low |
+| Requires specific CNI | No | No | Yes (Cilium) | No |
+| Best fit | Multi-cluster, compliance, full L7 | New Istio deployments | Cilium-native stacks | Simplicity-first |
 
 ## The forensic visibility gap — across all meshes
 
