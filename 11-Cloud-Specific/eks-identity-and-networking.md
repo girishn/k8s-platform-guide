@@ -65,6 +65,39 @@ aws eks create-pod-identity-association \
 
 The association is stored in EKS — not in the cluster as an annotation. Changing the role doesn't require modifying Kubernetes objects.
 
+## IRSA trust policy hardening
+
+A misconfigured IRSA trust policy is a privilege escalation path. The default trust policy from the AWS console scopes to an OIDC issuer and ServiceAccount — but omits the `sub` claim check, allowing any pod in any namespace that can create a ServiceAccount to assume the role.
+
+```json
+// INSECURE: scoped to OIDC issuer only — any SA in the cluster can assume this role
+{
+  "Condition": {
+    "StringEquals": {
+      "oidc.eks.us-east-1.amazonaws.com/id/EXAMPLED539D4633E53DE1B71EXAMPLE:aud": "sts.amazonaws.com"
+    }
+  }
+}
+
+// SECURE: scoped to specific namespace + ServiceAccount via sub claim
+{
+  "Condition": {
+    "StringEquals": {
+      "oidc.eks.us-east-1.amazonaws.com/id/EXAMPLED539D4633E53DE1B71EXAMPLE:sub":
+        "system:serviceaccount:payments:payments-api",
+      "oidc.eks.us-east-1.amazonaws.com/id/EXAMPLED539D4633E53DE1B71EXAMPLE:aud":
+        "sts.amazonaws.com"
+    }
+  }
+}
+```
+
+The `sub` claim binds the IAM role to `namespace:serviceaccount` — the format is `system:serviceaccount:<namespace>:<name>`. Without this condition, privilege escalation requires only the ability to create a ServiceAccount in the cluster.
+
+**Cross-namespace blast radius**: avoid sharing a single IAM role across multiple unrelated namespaces. If the `payments` namespace is compromised, a shared IAM role gives an attacker access to whatever `auth` or `billing` namespace services were also using it. One IAM role per workload is the correct model — the same principle as one ServiceAccount per workload in Kubernetes RBAC.
+
+Pod Identity avoids this class of problem by binding the association at the EKS API level (`namespace` + `serviceaccount` fields in the association) rather than in the IAM trust policy — the constraint is enforced by AWS, not by human policy authoring.
+
 ## VPC CNI and pod networking
 
 Amazon VPC CNI assigns pod IPs directly from the VPC CIDR — pods are first-class VPC citizens. This is EKS's default networking model and differs from overlay network CNIs (Calico, Cilium, Weave).

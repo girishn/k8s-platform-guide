@@ -62,6 +62,86 @@ spec:
 
 **Limitation:** The synced Kubernetes Secret still exists in etcd. ESO reduces the number of places a secret needs to be managed, but doesn't eliminate the etcd exposure.
 
+### ESO security hardening
+
+**SecretStore vs ClusterSecretStore**: `SecretStore` is namespace-scoped and the correct default — ExternalSecrets in `payments` can only reference a SecretStore in `payments`. `ClusterSecretStore` is accessible from every namespace and should be disabled unless required. If you must use `ClusterSecretStore`, add a `namespaceSelector` to restrict which namespaces can consume it:
+
+```yaml
+apiVersion: external-secrets.io/v1beta1
+kind: ClusterSecretStore
+spec:
+  conditions:
+  - namespaceSelector:
+      matchLabels:
+        secrets.company.com/allowed: "true"   # only labeled namespaces can use this store
+```
+
+**ESO controller token creation privilege**: by default ESO can create tokens for any ServiceAccount in the cluster — a compromised ESO controller can impersonate any workload. Harden this in the Helm chart:
+
+```yaml
+# values.yaml
+rbac:
+  serviceAccountTokenCreate: false    # disable blanket token creation
+```
+
+Then grant token creation explicitly, scoped to the specific ServiceAccounts ESO needs:
+
+```yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  namespace: payments
+subjects:
+- kind: ServiceAccount
+  name: external-secrets
+  namespace: external-secrets
+roleRef:
+  kind: Role
+  name: token-creator
+---
+kind: Role
+rules:
+- apiGroups: [""]
+  resources: ["serviceaccounts/token"]
+  verbs: ["create"]
+  resourceNames: ["payments-api"]    # only this specific SA
+```
+
+**NetworkPolicy for ESO egress**: ESO is a potential exfiltration vector — it has credentials to your secrets store and runs in your cluster. Restrict its egress:
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: eso-egress
+  namespace: external-secrets
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: external-secrets
+  policyTypes: [Egress]
+  egress:
+  - ports: [{ port: 443 }]    # K8s API server + secrets manager endpoints only
+```
+
+**Secret key naming enforcement**: use Kyverno to require ExternalSecrets to reference only secrets with a predefined prefix, preventing teams from accidentally syncing unrelated secrets:
+
+```yaml
+# Kyverno ClusterPolicy: enforce key naming
+spec:
+  rules:
+  - name: require-secret-prefix
+    match:
+      resources: { kinds: [ExternalSecret] }
+    validate:
+      message: "remoteRef.key must start with the namespace name"
+      pattern:
+        spec:
+          data:
+          - remoteRef:
+              key: "{{ request.object.metadata.namespace }}-*"
+```
+
 ## Sealed Secrets
 
 Sealed Secrets enables storing encrypted secrets in Git. The `kubeseal` CLI encrypts a Secret using the cluster's public key; only the in-cluster controller can decrypt it.
@@ -103,6 +183,19 @@ flowchart TD
     POD -->|"present SVID for mTLS"| OTHER["Other services\n(no password needed)"]
     POD -->|"exchange SVID for AWS creds\nvia IAM Roles Anywhere"| AWS["AWS IAM"]
 ```
+
+### EKS node attestation
+
+On EKS, the SPIRE agent proves its identity to the server using `k8s_psat` (Kubernetes Projected Service Account Token) attestation:
+
+1. The SPIRE agent presents a signed projected service account token to the SPIRE server
+2. The SPIRE server validates the token via the Kubernetes Token Review API
+3. The server queries node metadata (UID, namespace) to verify the node's legitimacy
+4. The server issues the agent's SVID, anchoring it to the verified node identity
+
+The alternative is AWS IID (Instance Identity Document) attestation — the agent presents a signed document from the EC2 instance metadata service. `k8s_psat` is preferred for managed EKS nodes because it doesn't require access to IMDS and works on Fargate.
+
+The SPIRE server itself needs AWS API access (for certificate storage, Aurora backing store). Use IRSA or Pod Identity — the same workload identity mechanism used by every other platform component.
 
 **Why it's complex:** SPIRE requires operating a server, agents, and a federation trust bundle. Workload attestation must be tuned carefully — if the attestation policy is too broad, compromised workloads can obtain SVIDs they shouldn't have. Nested SPIRE (SPIRE Servers federating across clusters) adds further complexity.
 
